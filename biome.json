@@ -1,0 +1,19 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.7.0/schema.json",
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"lineWidth": 100
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"style": {
+				"useImportType": "off"
+			}
+		}
+	},
+	"files": {
+		"ignore": ["dist", "coverage", "node_modules"]
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"extends": "./tsconfig.node.json",
+	"compilerOptions": {
+		"baseUrl": "./",
+		"noEmit": true,
+		"paths": {
+			"v-record-hotkey": ["../src"]
+		}
+	},
+	"include": ["src/**/*", "env.d.ts"]
+}
