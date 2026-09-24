@@ -1,242 +1,47 @@
-前提から申しますと、`v-record-hotkey` は
+# v-record-hotkey 開発計画
 
-> 「**1 回分のショートカット入力を “録画” して、`code + modifiers` などの構造化データとして返す Hooks ライブラリ**」
+更新日: 2026-07-15
 
-という立ち位置にすると整理がよろしいですわ。
+## 現在地
 
----
+`useRecordHotkey(inputRef, options)` による input 向け API と、`useHotkeyRecorder` による headless API が実装されている。
 
-## 1. 基本コンセプト
+単一キーコンビネーションの記録、表示整形、比較、禁止キー判定、修飾キーのプレビューを提供している。
 
-- **対象**: Vue 3 Composition API（`useXxx` な composable）
+composable、formatter、matcher には単体テストがある。
 
-- **責務**:
+現在の公開 API は、旧計画にあった `useRecordHotkey(options?)` ではなく input-first の形である。
 
-  1. `keydown` をフックして「ショートカット 1 発」を録画
-  2. IME・入力要素・予約ショートカットを安全に除外
-  3. 結果を **`code + modifiers` ベースの構造体**として返す
-  4. UI（ボタン・入力欄）は一切持たない
+複数ストローク、シーケンス入力、タイムアウト確定は実装されていない。
 
-- **ショートカットモデル例**:
+## v1 の仕様判断
 
-```ts
-export type ModKey = "Ctrl" | "Alt" | "Shift" | "Meta";
+- [ ] v1 を単一キーコンビネーション専用として確定するか、複数ストロークを含めるか決める。
+- [ ] 単一キーコンビネーション専用にする場合は、複数ストロークを将来候補として明記し、未実装の option を公開仕様へ含めない。
+- [ ] Meta、Control、Alt、Shift のみを押した場合の確定条件を公開仕様として明記する。
+- [ ] キーボード配列に依存する `KeyboardEvent.key` と物理位置を表す `KeyboardEvent.code` の利用方針を明記する。
 
-export interface RecordedHotkey {
-  code: string; // e.code (例: "KeyK", "Semicolon", "Digit1")
-  mods: ModKey[]; // ["Ctrl", "Shift"] など
-  location: number; // KeyboardEvent.location
-  // オプション
-  key?: string; // e.key (例: "k", ":" など)
-}
-```
+## npm 公開準備
 
----
+- [ ] npm と pnpm のどちらを正準の package manager とするか決め、重複する lockfile を整理する。
+- [ ] `peerDependencies.vue` の範囲と README の対応バージョン表記を一致させる。
+- [ ] MIT の `LICENSE` ファイルを追加し、`package.json` の license 表記と一致させる。
+- [ ] repository、homepage、bugs、author、packageManager など、公開パッケージに必要な metadata を確認する。
+- [ ] README と公開 TSDoc から開発時の人格表現を除き、利用者向けの説明へ統一する。
+- [ ] `npm pack --dry-run` 相当で配布物を確認し、不要なソースや lockfile が含まれないようにする。
+- [ ] 空の consumer project で ESM import、型解決、Vue への組み込みを確認する。
+- [ ] 公開前に test、lint、format、build、pack 検証を実行する。
+- [ ] CI と `prepublishOnly` の責務を決め、公開前検証の抜けを防ぐ。
+- [ ] `main` ブランチの upstream tracking を設定する。
 
-## 2. コア composable：`useRecordHotkey`
+## 品質確認
 
-### シグネチャ
+- [ ] SSR 環境で import した際に `window` や DOM へ早期アクセスしないことを確認する。
+- [ ] input ref の差し替え、unmount、再 mount で event listener が重複しないことを確認する。
+- [ ] 日本語配列、US 配列、macOS、Windows の主要キーで表示と比較を確認する。
+- [ ] IME composition、auto-repeat、blur、Escape、Backspace の境界動作をテストで固定する。
+- [ ] reactive な options を対応範囲に含めるか決め、対応しない場合は制約を文書化する。
 
-```ts
-function useRecordHotkey(
-  options?: UseRecordHotkeyOptions
-): UseRecordHotkeyReturn;
-```
+## 完了条件
 
-### options（＝このライブラリで言う「props」）
-
-```ts
-export interface UseRecordHotkeyOptions {
-  /** どこで keydown を聴くか（既定: window） */
-  target?: EventTarget | (() => EventTarget | null);
-
-  /** 記録モード：codeベース/文字ベース/両方 */
-  mode?: "code" | "key" | "both"; // 既定: "code"
-
-  /** IME中のイベントを無視するか（isComposing, key==="Process"） */
-  ignoreComposition?: boolean; // 既定: true
-
-  /** input/textarea/contenteditable 内で無効にするか */
-  ignoreInEditable?: boolean; // 既定: true
-
-  /**
-   * 上記 ignoreInEditable をもう少し柔らかくしたい場合のフィルタ。
-   * true を返したイベントだけ録画対象にする。
-   */
-  eventFilter?: (e: KeyboardEvent) => boolean;
-
-  /** 一度記録したら自動で録画を止めるか */
-  once?: boolean; // 既定: true
-
-  /** false のときは内部リスナを張らない（外部で start/stop を制御） */
-  enabled?: boolean; // 既定: true
-
-  /** 記録中に preventDefault するか（or 条件関数） */
-  preventDefault?: boolean | ((e: KeyboardEvent) => boolean); // 既定: true
-
-  /** stopPropagation するか */
-  stopPropagation?: boolean | ((e: KeyboardEvent) => boolean); // 既定: false
-
-  /** 許可する修飾キーの種類 */
-  allowedModifiers?: ModKey[]; // 既定: ["Ctrl","Alt","Shift","Meta"]
-
-  /** 禁止する組み合わせ（"Ctrl+S" などブラウザ/OS既定） */
-  disallow?: string[]; // 例: ["Ctrl+S","Meta+Q"]
-
-  /**
-   * マルチストローク対応: true なら「Ctrl+K → C」のような
-   * シーケンスを録画（配列）／数値なら最大ストローク数。
-   */
-  multiStroke?: boolean | number; // 既定: false
-
-  /** 録画タイムアウト（ms）。multiStroke時に有効。null なら無制限。 */
-  timeoutMs?: number | null; // 既定: 3000
-
-  /** 初期値（既存のショートカットを表示用に返す目的） */
-  initial?: RecordedHotkey | RecordedHotkey[] | null;
-
-  /** 記録開始時フック */
-  onStart?: () => void;
-
-  /** 各ストローク更新時フック（multiStroke用） */
-  onUpdate?: (current: RecordedHotkey | RecordedHotkey[]) => void;
-
-  /** 記録終了時フック */
-  onEnd?: (
-    result: RecordedHotkey | RecordedHotkey[] | null,
-    reason: "recorded" | "cancel" | "timeout"
-  ) => void;
-}
-```
-
-### 戻り値
-
-```ts
-export interface UseRecordHotkeyReturn {
-  /** 現在録画中かどうか */
-  isRecording: Ref<boolean>;
-
-  /** 直近に確定したショートカット（multiStroke=false） */
-  last: Ref<RecordedHotkey | null>;
-
-  /** multiStroke時の現在シーケンス */
-  sequence: Ref<RecordedHotkey[]>;
-
-  /** タイムアウト中か／エラー情報 */
-  isTimeout: Ref<boolean>;
-  error: Ref<string | null>;
-
-  /** 録画開始・停止・トグル */
-  start: () => void;
-  stop: () => void;
-  toggle: () => void;
-
-  /** 内部状態をクリア（last/sequence/error） */
-  reset: () => void;
-}
-```
-
----
-
-## 3. 補助 composable（v1 から用意しておくと便利）
-
-### 3-1. 表示用：`useHotkeyFormatter`
-
-ショートカットの表記ルールは各プロジェクトで悩ましいので、**デフォルト実装をヘルパとして提供**しておくと親切ですわ。
-
-```ts
-interface UseHotkeyFormatterOptions {
-  os?: "auto" | "mac" | "win"; // 既定: auto判定
-  showShiftImplicit?: boolean; // "Shift + ; ( : )" のような併記ルール
-}
-
-function useHotkeyFormatter(options?: UseHotkeyFormatterOptions) {
-  function format(h: RecordedHotkey | RecordedHotkey[]): string;
-  return { format };
-}
-```
-
-- mac のとき: `⌘` / `⌥` / `⇧` / `⌃` ベース
-- Win/Linux のとき: `Ctrl + Alt + Shift + ...`
-- `Semicolon` + `Shift` の場合は **`Shift + ; ( : )`** など。
-
-### 3-2. マッチング用：`matchHotkey`
-
-保存したショートカットを実際の `KeyboardEvent` と突き合わせる Helper。
-
-```ts
-function matchHotkey(e: KeyboardEvent, target: RecordedHotkey): boolean;
-```
-
-これがあると、
-
-- 「録画 UI」 → `RecordedHotkey` を保存
-- 「実行側」 → `matchHotkey(event, shortcut)` で判定
-
-という責務分離ができ、ライブラリの使い勝手が向上いたしますわ。
-
----
-
-## 4. 典型的な利用イメージ
-
-```ts
-// v-record-hotkey の利用側（Vue3コンポーネント）
-import { useRecordHotkey, useHotkeyFormatter } from "v-record-hotkey";
-
-const { isRecording, last, start } = useRecordHotkey({
-  mode: "code",
-  once: true,
-  disallow: ["Meta+Q", "Ctrl+S"],
-  onEnd(result, reason) {
-    if (reason === "recorded" && result) {
-      saveToStore(result); // code+mods を状態管理などへ
-    }
-  }
-});
-
-const { format } = useHotkeyFormatter({ os: "auto" });
-const label = computed(() =>
-  last.value ? format(last.value) : "ショートカット未設定"
-);
-```
-
-UI 側は自由に：
-
-- ボタン：「録画開始」→ `start()`
-- ラベル：`label` を `<kbd>` で装飾
-
-という形で組めますわ。
-
----
-
-## 5. v1 で必ず押さえたい「基本機能」まとめ
-
-1. **録画**
-
-   - 1 ショートカット／オプションでマルチストローク
-   - `KeyboardEvent.code + modifiers` 基準で保存
-
-2. **安全性**
-
-   - IME (`isComposing`, `"Process"`) 無視
-   - `input/textarea/contenteditable` 内での無効化
-   - OS/ブラウザ予約ショートカットの blacklist
-
-3. **API**
-
-   - composable: `useRecordHotkey(options?)`
-   - 状態: `isRecording`, `last`, `sequence`, `error`
-   - 制御: `start`, `stop`, `toggle`, `reset`
-   - コールバック: `onStart`, `onUpdate`, `onEnd`
-
-4. **補助**
-
-   - `useHotkeyFormatter`（OS 別ラベル整形）
-   - `matchHotkey`（実行側の判定）
-
-このあたりまでを v1 として切っておくと、後から
-
-- `navigator.keyboard.getLayoutMap()` 対応
-- 設定のシリアライズ／デシリアライズ helper
-
-などを拡張しやすくなりますわ。
+v1 の仕様境界を決定し、公開 metadata とライセンスを整え、独立した consumer project と CI で配布物を検証できた時点を初回公開の完了条件とする。
