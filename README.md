@@ -1,21 +1,68 @@
 # v-record-hotkey
 
-Vue 3 Composition API 向けの、ショートカット入力欄を作るためのライブラリですわ。  
-`<input ref="shortcutRef" />` を渡すだけで、録画開始、表示、取消、削除、利用側定義の拒否リストまでまとめて扱えますの。
+Vue 3 Composition APIでショートカット入力欄を作るライブラリです。
+`useRecordHotkey(inputRef, options)`で、キーの記録、表示、確定、取消、削除をまとめて扱います。
 
-## 特徴
+現在は単一のキーコンビネーションに対応しています。
+複数ストロークのシーケンスやタイムアウト確定は実装されていません。
 
-- **input ファースト**: `useRecordHotkey(inputRef, options)` が公開 API の中心でございますわ。
-- **単独キーも修飾キー付きも対応**: `A`、`F1`、`Ctrl + K`、`Shift + A` を 1 コンボとして録画できますの。
-- **modifier preview**: 修飾キーだけ押している途中状態も `preview` で取得できますわ。
-- **利用側定義の拒否リスト**: `disallow` に配列を渡したときだけ、その組み合わせを拒否いたしますの。
-- **低レベル API も同梱**: 高度な UI を作りたい場合は `useHotkeyRecorder()` を直接使えますわ。
+## ローカルデモ
+
+Node.js 24とpnpm 11.10.0で動作確認しています。
+リポジトリのルートで実行してください。
+
+```bash
+pnpm install --frozen-lockfile
+pnpm run demo
+```
+
+ターミナルに表示されるURL（通常は `http://127.0.0.1:5173/`）を開きます。
+終了するには `Ctrl+C` を押してください。
+
+デモには次の機能があります。
+
+- 基本入力、手動確定、修飾キー必須の設定切り替え
+- 確定値、候補、修飾キープレビュー、エラーの表示
+- Windows/LinuxとmacOSの表示比較
+- `Details`内での`matchHotkey`による記録済みキーの照合
+- `Details`内でのJSONの返り値、設定、操作履歴の確認
+
+設定の切り替え時にはcomposableを作り直し、入力値と履歴を初期化します。
+キー入力には物理キーボードを使用してください。
+
+静的な配布物のビルドと確認は次のコマンドで行います。
+
+```bash
+pnpm run demo:build
+pnpm run demo:preview
+```
+
+出力先は `example/dist/` です。
+HTMLとJavaScript、CSSのみで動き、バックエンドは不要です。
+Viteの `base: "./"` を指定しているため、GitHub Pagesのリポジトリ配下などにも配置できます。
+
+### 将来のGitHub Pages公開
+
+`.github/workflows/demo-pages.yml`は手動実行専用です。
+pushによる自動公開は行いません。
+
+公開する際は、リポジトリがPagesを利用できる状態になってから、次の手順で操作します。
+
+1. workflowをデフォルトブランチに反映する。
+2. GitHubの `Settings > Pages > Build and deployment > Source` を `GitHub Actions` にする。
+3. `Actions > Publish demo to GitHub Pages > Run workflow` を実行する。
+
+workflowはデモだけをビルドして公開します。
+npmパッケージの公開は別の作業です。
 
 ## インストール
 
+npmへの初回公開は準備中です。
+公開後は次のコマンドでインストールできます。
+現在の `peerDependencies` はVue `3.5.24`を指定しています。
+
 ```bash
-npm install v-record-hotkey
-npm install vue@^3.3
+pnpm add v-record-hotkey vue@3.5.24
 ```
 
 ## クイックスタート
@@ -25,15 +72,7 @@ import { ref } from "vue";
 import { useRecordHotkey } from "v-record-hotkey";
 
 const shortcutRef = ref<HTMLInputElement | null>(null);
-
-const {
-  inputAttrs,
-  value,
-  isRecording,
-  start,
-  cancel,
-  clear,
-} = useRecordHotkey(shortcutRef, {
+const { inputAttrs, value, isRecording, start, cancel, clear } = useRecordHotkey(shortcutRef, {
   disallow: ["Ctrl+S", "Meta+Q"],
 });
 ```
@@ -41,25 +80,24 @@ const {
 ```vue
 <template>
   <input ref="shortcutRef" v-bind="inputAttrs" />
-
   <button type="button" @click="start">Record</button>
   <button type="button" @click="cancel">Cancel</button>
   <button type="button" @click="clear">Clear</button>
 </template>
 ```
 
-`focus`、`click`、`Enter` で録画を開始し、既定では有効なキー入力が入った時点で確定いたしますわ。`Escape` で取消、`Backspace` / `Delete` で削除できますの。
+## 標準の動作
 
-## デフォルト挙動
+- focus、click、idle状態のEnterで記録を開始します。
+- `A`、`F1`、`Ctrl + K`、`Shift + A`などの入力を記録し、即座に確定します。
+- 修飾キーだけを押した場合は `preview` を更新します。修飾キーだけでは確定しません。
+- 修飾キーなしのEscapeで取消し、確定済みの値を保持します。
+- 修飾キーなしのBackspace / Deleteで値を削除します。
+- blur時に候補があれば確定し、候補がなければ取消します。
+- IME変換中の記録とキーのauto-repeatを無視します。
+- 固定の禁止リストは持ちません。`disallow`に指定した組み合わせだけを拒否します。
 
-- `focus` で録画開始
-- `click` で録画開始
-- `Enter` で録画開始
-- 有効な hotkey を 1 回記録したら即確定
-- `Escape` で取消
-- `Backspace` / `Delete` でクリア
-- `blur` 時に候補が残っていれば確定、なければ取消
-- 固定の予約ショートカットは持たず、`disallow` へ渡されたものだけ拒否
+OSやブラウザが先に処理するショートカットは、ページ側で受信できない場合があります。
 
 ## `useRecordHotkey`
 
@@ -74,59 +112,43 @@ function useRecordHotkey(
 
 | オプション | 既定値 | 説明 |
 | --- | --- | --- |
-| `initial` | `null` | 初期ショートカットですわ。 |
-| `disallow` | `[]` | 利用側が拒否したいコンボを、文字列または `RecordedHotkey` 配列で渡せますの。 |
-| `allowedModifiers` | `Ctrl/Alt/Shift/Meta` | 許可する修飾キー集合でございますわ。 |
-| `requireModifierForPrintable` | `false` | `true` にすると文字キーに `Ctrl` / `Alt` / `Meta` を要求いたしますの。 |
-| `allowUnmodifiedNonPrintable` | `true` | `Escape` や `F1` などの単独キーを許可いたしますわ。 |
-| `startOnFocus` | `true` | input focus で録画を始めますの。 |
-| `startOnClick` | `true` | input click で録画を始めますわ。 |
-| `startOnEnter` | `true` | idle 状態の Enter で録画を始めますの。 |
-| `confirmOnCapture` | `true` | 有効な入力を得た時点で即確定いたしますわ。 |
-| `confirmOnBlur` | `true` | 録画中に blur したとき、候補があれば確定いたしますの。 |
-| `cancelOnEscape` | `true` | 録画中の Escape で取消いたしますわ。 |
-| `clearKeys` | `["Backspace", "Delete"]` | このキーで現在値を削除いたしますの。 |
-| `placeholder` | - | input へ渡す placeholder ですわ。 |
-| `formatOptions` | - | `useHotkeyFormatter()` へ渡す表示設定でございますの。 |
-| `onStart` / `onConfirm` / `onCancel` / `onClear` / `onError` | - | UI 連携用フックですわ。 |
+| `initial` | `null` | 初期ショートカット |
+| `disallow` | `[]` | 拒否する文字列または `RecordedHotkey` の配列 |
+| `allowedModifiers` | `Ctrl/Alt/Shift/Meta` | 許可する修飾キー |
+| `requireModifierForPrintable` | `false` | 文字キーにCtrl / Alt / Metaを要求 |
+| `allowUnmodifiedNonPrintable` | `true` | F1などの非文字キーを単独で許可 |
+| `startOnFocus` / `startOnClick` / `startOnEnter` | `true` | 記録の開始条件 |
+| `confirmOnCapture` | `true` | 有効な入力を得た時点で確定 |
+| `confirmOnBlur` | `true` | blur時に候補があれば確定 |
+| `cancelOnEscape` | `true` | Escapeで取消 |
+| `clearKeys` | `["Backspace", "Delete"]` | 値を削除するキー |
+| `placeholder` | - | 入力欄のplaceholder |
+| `formatOptions` | - | 表示設定 |
+| `onStart` / `onConfirm` / `onCancel` / `onClear` / `onError` | - | 操作に応じたコールバック |
+
+optionsはcomposable作成時に読み取ります。
+作成後の設定変更を反映する場合はcomposableを作り直してください。
+input refはVueのref、getter、要素を受け取れます。
 
 ### 戻り値
 
 | プロパティ | 説明 |
 | --- | --- |
-| `value` | 確定済みショートカットですわ。 |
-| `candidate` | 録画セッション中の候補でございますの。 |
-| `preview` | 修飾キーだけ押している途中状態ですわ。 |
-| `error` | `{ code, message }` のエラー情報ですの。 |
-| `isRecording` | 現在録画中かどうかでございますわ。 |
-| `displayValue` | input に出す表示文字列ですの。 |
-| `inputAttrs` | `v-bind` 用の属性セットでございますわ。 |
-| `start` / `confirm` / `cancel` / `clear` / `reset` | 制御メソッドですの。 |
+| `value` | 確定済みのショートカット |
+| `candidate` | 記録中の候補 |
+| `preview` | 修飾キーだけを押している途中状態 |
+| `error` | `{ code, message }` のエラー情報 |
+| `isRecording` | 記録中かどうか |
+| `displayValue` | 入力欄に表示する文字列 |
+| `inputAttrs` | `v-bind`用の属性。value、readonly、autocomplete、spellcheck、placeholder、aria-invalidを含む |
+| `start` / `confirm` / `cancel` / `clear` / `reset` | 制御メソッド。resetは初期値へ戻す |
 
-### `inputAttrs`
+## 低レベルAPIと補助API
 
-```ts
-{
-  value: string;
-  readonly: true;
-  autocomplete: "off";
-  spellcheck: false;
-  placeholder?: string;
-  "aria-invalid"?: "true";
-}
-```
-
-基本は `<input ref="shortcutRef" v-bind="inputAttrs" />` としてお使いくださいませ。
-
-## `useHotkeyRecorder`
-
-```ts
-function useHotkeyRecorder(options?: UseHotkeyRecorderOptions): UseHotkeyRecorderReturn;
-```
-
-こちらは低レベル API で、任意の `target` に録画エンジンだけを張りたい場合に使いますの。公開面の既定は `useRecordHotkey()` で、`useHotkeyRecorder()` は headless な escape hatch とお考えくださいませ。
-
-## `RecordedHotkey`
+`useHotkeyRecorder(options)`は任意の `target` に記録エンジンを接続します。
+既定のtargetはwindowです。
+編集可能なinput / textarea / contenteditable内の入力は既定で無視します。
+`target`と `enabled` はrefまたはgetterでも指定できます。
 
 ```ts
 interface RecordedHotkey {
@@ -137,52 +159,42 @@ interface RecordedHotkey {
 }
 ```
 
-`code` は実行時照合向け、`key` は表示補助向け、`modifiers` は修飾キー集合でございます。
-
-## `useHotkeyFormatter`
-
-```ts
-const { format } = useHotkeyFormatter({
-  os?: "auto" | "mac" | "win",
-  showShiftImplicit?: boolean,
-});
-```
-
-- Windows/Linux では `Ctrl + Shift + K`
-- macOS では `⌃⇧K`
-- `preview` もそのまま渡せますの
-
-## `matchHotkey`
+`code`は物理的なキー位置に基づく照合に使います。
+`key`はキーボード配列や修飾キーによって変わる入力文字を保持します。
+formatterは主にcodeを使ってラベルを作ります。
 
 ```ts
-const isMatch = matchHotkey(event, recorded, {
-  compareKey?: boolean,
-  compareLocation?: boolean,
-});
+const { format } = useHotkeyFormatter({ os: "mac", showShiftImplicit: false });
+const isMatch = matchHotkey(event, recorded, { compareKey: false, compareLocation: false });
 ```
 
-既定では `code + modifiers` で照合し、必要時だけ `key` や `location` を厳密比較できますわ。
+formatterの `os` は `"auto" | "mac" | "win"` を指定できます。
+既定のautoはOSを判定し、Windows/Linuxでは `Ctrl + Shift + K`、macOSでは `⌃⇧K` のように表示します。
+previewもformatに渡せます。
 
-## example
+matcherは既定でcodeとmodifiersを比較します。
+必要に応じてkeyとlocationも比較できます。
 
-ルート配下の `example/` は、新しい input ファースト API を使ったデモでございます。
+## 開発
+
+pnpmで管理しています。
+`package.json`の `packageManager` にpnpmのバージョンを固定しています。
+本体と `example/` はworkspaceとして管理し、ルートの `pnpm-lock.yaml` を共有します。
+依存のインストールはリポジトリのルートで一度だけ行ってください。
 
 ```bash
-cd example
-npm install
-npm run dev
+pnpm install --frozen-lockfile
+pnpm run test
+pnpm run lint
+pnpm run format
+pnpm run typecheck
+pnpm run build
 ```
 
-## ビルドとテスト
-
-```bash
-npm run test
-npm run lint
-npm run format
-npm run typecheck
-npm run build
-```
+`pnpm run format`はファイルを書き換えます。
+ライブラリ本体は `dist/` へESM、CommonJS、型定義を出力します。
 
 ## ライセンス
 
-MIT License でございます。
+`package.json`のlicenseはMITです。
+LICENSEファイルの追加は公開前の残作業です。

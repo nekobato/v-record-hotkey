@@ -1,12 +1,14 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
-import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
+	base: "./",
 	plugins: [vue()],
 	resolve: {
+		dedupe: ["vue"],
 		alias: {
-			"v-record-hotkey": path.resolve(__dirname, "../src"),
+			"v-record-hotkey": fileURLToPath(new URL("../src", import.meta.url)),
 		},
 	},
 	server: {
