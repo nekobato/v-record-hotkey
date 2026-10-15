@@ -1,51 +1,47 @@
 {
-  "name": "v-record-hotkey",
-  "version": "1.0.0",
-  "description": "Vue 3 composables for recording and formatting keyboard shortcuts",
-  "keywords": [
-    "vue",
-    "composition-api",
-    "hotkey",
-    "keyboard",
-    "composables"
-  ],
-  "license": "MIT",
-  "type": "module",
-  "main": "dist/index.cjs",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "lint": "biome lint .",
-    "format": "biome format --write .",
-    "typecheck": "vue-tsc --noEmit",
-    "clean": "rimraf dist"
-  },
-  "peerDependencies": {
-    "vue": "3.5.24"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@types/node": "22.19.1",
-    "happy-dom": "15.11.7",
-    "rimraf": "5.0.10",
-    "tsup": "8.5.1",
-    "typescript": "5.9.3",
-    "vite": "5.4.21",
-    "vitest": "2.1.9",
-    "vue": "3.5.24",
-    "vue-tsc": "2.2.12"
-  }
+	"name": "v-record-hotkey",
+	"version": "1.0.0",
+	"description": "Vue 3 composables for recording and formatting keyboard shortcuts",
+	"keywords": ["vue", "composition-api", "hotkey", "keyboard", "composables"],
+	"license": "MIT",
+	"packageManager": "pnpm@11.10.0",
+	"type": "module",
+	"main": "dist/index.cjs",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		}
+	},
+	"files": ["dist"],
+	"scripts": {
+		"demo": "pnpm --filter v-record-hotkey-example run dev --host 127.0.0.1",
+		"demo:build": "pnpm --filter v-record-hotkey-example run build",
+		"demo:preview": "pnpm --filter v-record-hotkey-example run preview --host 127.0.0.1",
+		"build": "tsup src/index.ts --format esm,cjs --dts --clean",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"lint": "biome lint .",
+		"format": "biome format --write .",
+		"typecheck": "vue-tsc --noEmit",
+		"clean": "rimraf dist"
+	},
+	"peerDependencies": {
+		"vue": "3.5.24"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@types/node": "22.19.1",
+		"happy-dom": "15.11.7",
+		"rimraf": "5.0.10",
+		"tsup": "8.5.1",
+		"typescript": "5.9.3",
+		"vite": "5.4.21",
+		"vitest": "2.1.9",
+		"vue": "3.5.24",
+		"vue-tsc": "2.2.12"
+	}
 }

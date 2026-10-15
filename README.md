@@ -370,13 +370,12 @@ formatterは主に`code`からラベルを作り、修飾キーだけのプレ�
 
 ## ローカルデモ
 
-Node.js 24を使用します。
+Node.js 24とpnpm 11.10.0を使用します。
 リポジトリをcloneし、ルートで実行してください。
 
 ```bash
-npm install
-npm --prefix example install
-npm --prefix example run dev -- --host 127.0.0.1
+pnpm install --frozen-lockfile
+pnpm run demo
 ```
 
 ターミナルに表示されるURL（通常は`http://127.0.0.1:5173/`）を開きます。
@@ -384,10 +383,12 @@ npm --prefix example run dev -- --host 127.0.0.1
 
 デモでは次の機能を確認できます。
 
-- キーの記録、取消、削除、初期値への復元
-- `Ctrl+S`と`Meta+Q`の入力禁止
-- 確定値、候補、修飾キープレビュー、エラー、操作履歴の確認
+- 基本入力、手動確定、修飾キー必須の設定切り替え
+- 確定値、候補、修飾キープレビュー、エラーの表示
+- Windows/LinuxとmacOSの表示比較
+- `Details`内での`matchHotkey()`による照合、JSONの返り値、設定、操作履歴の確認
 
+モードを切り替えると、入力値と履歴がリセットされます。
 キー入力には物理キーボードを使用してください。
 
 ## ライセンス

@@ -192,7 +192,7 @@ export function useRecordHotkey(
 			cancel();
 		};
 
-			const handleKeydown = (event: KeyboardEvent) => {
+		const handleKeydown = (event: KeyboardEvent) => {
 			if (!recorder.isRecording.value) {
 				if (startOnEnter && event.key === "Enter" && hasNoModifier(event)) {
 					stopNativePropagation(event);
@@ -216,21 +216,21 @@ export function useRecordHotkey(
 			if (matchesKeyCommand(event, clearKeys) && hasNoModifier(event)) {
 				stopNativePropagation(event);
 				clear();
-				}
-			};
-			const keydownListener = handleKeydown as EventListener;
+			}
+		};
+		const keydownListener = handleKeydown as EventListener;
 
-			input.addEventListener("focus", handleFocus);
-			input.addEventListener("click", handleClick);
-			input.addEventListener("blur", handleBlur);
-			input.addEventListener("keydown", keydownListener);
+		input.addEventListener("focus", handleFocus);
+		input.addEventListener("click", handleClick);
+		input.addEventListener("blur", handleBlur);
+		input.addEventListener("keydown", keydownListener);
 
-			const detach = () => {
-				input.removeEventListener("focus", handleFocus);
-				input.removeEventListener("click", handleClick);
-				input.removeEventListener("blur", handleBlur);
-				input.removeEventListener("keydown", keydownListener);
-			};
+		const detach = () => {
+			input.removeEventListener("focus", handleFocus);
+			input.removeEventListener("click", handleClick);
+			input.removeEventListener("blur", handleBlur);
+			input.removeEventListener("keydown", keydownListener);
+		};
 
 		cleanupListeners.value?.();
 		cleanupListeners.value = detach;
