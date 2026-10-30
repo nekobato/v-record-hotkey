@@ -9,6 +9,8 @@ Vue 3のショートカット設定画面向けcomposableライブラリです�
 - Windows/LinuxとmacOSに合わせた表示
 - `RecordedHotkey`による保存と`KeyboardEvent`との照合
 
+[デモを試す](https://nekobato.github.io/v-record-hotkey/)
+
 ## 目次
 
 - [インストール](#インストール)
@@ -17,13 +19,12 @@ Vue 3のショートカット設定画面向けcomposableライブラリです�
 - [使用例](#使用例)
 - [APIリファレンス](#apiリファレンス)
 - [制約と注意点](#制約と注意点)
-- [ローカルデモ](#ローカルデモ)
 - [ライセンス](#ライセンス)
 
 ## インストール
 
 現在はnpm未公開です。
-動作を試す場合は[ローカルデモ](#ローカルデモ)を起動してください。
+動作は[デモ](https://nekobato.github.io/v-record-hotkey/)で確認できます。
 公開後のインストールコマンドは次のとおりです。
 
 ```bash
@@ -367,29 +368,6 @@ formatterは主に`code`からラベルを作り、修飾キーだけのプレ�
 - 修飾キーだけでは確定しません。`preview`として扱います。
 - `useRecordHotkey()`のEscape、Backspace、Deleteは既定で操作用です。記録対象にする場合は、`cancelOnEscape: false`や`clearKeys: []`を指定してください。
 - 記録とキー照合はブラウザの`KeyboardEvent`を使います。SSR中には記録を開始せず、対象要素がmountされた後に開始してください。
-
-## ローカルデモ
-
-Node.js 26.12.1とpnpm 11.10.0を使用します。
-リポジトリをcloneし、ルートで実行してください。
-
-```bash
-pnpm install --frozen-lockfile
-pnpm run demo
-```
-
-ターミナルに表示されるURL（通常は`http://127.0.0.1:5173/`）を開きます。
-終了するには`Ctrl+C`を押してください。
-
-デモでは次の機能を確認できます。
-
-- 基本入力、手動確定、修飾キー必須の設定切り替え
-- 確定値、候補、修飾キープレビュー、エラーの表示
-- Windows/LinuxとmacOSの表示比較
-- `Details`内での`matchHotkey()`による照合、JSONの返り値、設定、操作履歴の確認
-
-モードを切り替えると、入力値と履歴がリセットされます。
-キー入力には物理キーボードを使用してください。
 
 ## ライセンス
 
