@@ -97,7 +97,7 @@ const restoreInitial = () => {
 		<p id="shortcut-help" class="hint">{{ preset.hint }}</p>
 		<p id="shortcut-error" class="error" role="alert">{{ errorMessage }}</p>
 		<div class="actions">
-			<button type="button" class="primary" :disabled="isRecording" @pointerdown.prevent @click="start">記録</button>
+			<button type="button" class="primary" :disabled="isRecording" @pointerdown.prevent @click="start">記録開始</button>
 			<button v-if="preset.id === 'manual'" type="button" class="primary" :disabled="!candidate" @pointerdown.prevent @click="confirm">確定</button>
 			<button v-if="isRecording" type="button" @pointerdown.prevent @click="cancel">取消</button>
 			<button type="button" :disabled="!value && !isRecording" @pointerdown.prevent @click="clear">削除</button>
