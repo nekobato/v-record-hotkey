@@ -1,31 +1,33 @@
 # v-record-hotkey
 
-Vue 3のショートカット設定画面向けcomposableライブラリです。
-`useRecordHotkey()`に入力要素のrefを渡すと、キーの記録、表示、確定、取消、削除をまとめて扱えます。
-入力欄のHTMLとスタイルはアプリ側で用意するため、既存のフォームに組み込めます。
+English | [日本語](README.ja.md)
 
-- `A`、`F1`、`Ctrl + K`など、単一のキーコンビネーションを記録
-- 修飾キーのプレビュー、自動確定と手動確定、禁止ショートカットの設定
-- Windows/LinuxとmacOSに合わせた表示
-- `RecordedHotkey`による保存と`KeyboardEvent`との照合
+Vue 3 composables for keyboard shortcut settings.
+Pass an input element ref to `useRecordHotkey()` to handle recording, display, confirmation, cancellation, and clearing.
+You provide the input markup and styles, so it fits into your existing forms.
 
-[デモを試す](https://nekobato.github.io/v-record-hotkey/)
+- Record a single key combination, such as `A`, `F1`, or `Ctrl + K`
+- Preview modifier keys, confirm automatically or manually, and disallow specific shortcuts
+- Format shortcuts for Windows/Linux and macOS
+- Store shortcuts as `RecordedHotkey` and match them against `KeyboardEvent`
 
-## 目次
+[Try the demo](https://nekobato.github.io/v-record-hotkey/)
 
-- [インストール](#インストール)
-- [クイックスタート](#クイックスタート)
-- [入力欄の基本操作](#入力欄の基本操作)
-- [使用例](#使用例)
-- [APIリファレンス](#apiリファレンス)
-- [制約と注意点](#制約と注意点)
-- [ライセンス](#ライセンス)
+## Contents
 
-## インストール
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Default input behavior](#default-input-behavior)
+- [Examples](#examples)
+- [API reference](#api-reference)
+- [Limitations and notes](#limitations-and-notes)
+- [License](#license)
 
-現在はnpm未公開です。
-動作は[デモ](https://nekobato.github.io/v-record-hotkey/)で確認できます。
-公開後のインストールコマンドは次のとおりです。
+## Installation
+
+The package has not been published to npm yet.
+You can try it in the [demo](https://nekobato.github.io/v-record-hotkey/).
+Once it is published, install it with:
 
 ```bash
 pnpm add v-record-hotkey vue@3.5.24
@@ -35,14 +37,14 @@ pnpm add v-record-hotkey vue@3.5.24
 npm install v-record-hotkey vue@3.5.24
 ```
 
-必要なVueのバージョンは`3.5.24`です。
-以下の使用例はVue Single-File Component（SFC）の`<script setup lang="ts">`を使用します。
-composableを直接importするため、`app.use()`による登録は不要です。
+Vue `3.5.24` is required.
+The examples below use `<script setup lang="ts">` in Vue Single-File Components (SFCs).
+Import the composables directly; no `app.use()` registration is needed.
 
-## クイックスタート
+## Quick start
 
-次の内容をVueコンポーネントに置きます。
-入力欄をクリックして`Ctrl + K`などを押すと、その組み合わせが確定します。
+Add the following to a Vue component.
+Click the input and press a shortcut such as `Ctrl + K` to confirm it.
 
 ```vue
 <script setup lang="ts">
@@ -51,50 +53,50 @@ import { useRecordHotkey } from "v-record-hotkey";
 
 const inputRef = useTemplateRef<HTMLInputElement>("shortcutInput");
 const { inputAttrs, value, isRecording, error, clear } = useRecordHotkey(inputRef, {
-  placeholder: "クリックしてキーを入力",
+  placeholder: "Click and press a key",
 });
 </script>
 
 <template>
-  <label for="shortcut">ショートカット</label>
+  <label for="shortcut">Shortcut</label>
   <input
     id="shortcut"
     ref="shortcutInput"
     v-bind="inputAttrs"
     aria-describedby="shortcut-help shortcut-error"
   />
-  <p id="shortcut-help">Escapeで取消、Backspace / Deleteで削除できます。</p>
-  <p role="status">{{ isRecording ? "キーを入力してください" : "記録を開始できます" }}</p>
+  <p id="shortcut-help">Press Escape to cancel or Backspace / Delete to clear.</p>
+  <p role="status">{{ isRecording ? "Press a key" : "Ready to record" }}</p>
   <p id="shortcut-error" role="alert">{{ error?.message }}</p>
-  <button type="button" :disabled="!value" @click="clear">削除</button>
+  <button type="button" :disabled="!value" @click="clear">Clear</button>
 </template>
 ```
 
-`inputAttrs`には表示用の`value`と`readonly`などが含まれます。
-入力欄には`v-bind="inputAttrs"`を使い、確定結果は`value`から読み取ります。
-スクリプト内では`value.value`、テンプレート内では`value`で参照できます。
-ラベル、補足、エラー表示、スタイルはアプリ側で用意してください。
+`inputAttrs` includes the display `value`, `readonly`, and other input attributes.
+Bind it with `v-bind="inputAttrs"` and read the confirmed shortcut from `value`.
+Use `value.value` in scripts and `value` in templates.
+Provide your own labels, help text, error messages, and styles.
 
-## 入力欄の基本操作
+## Default input behavior
 
-既定の設定では次のように動作します。
+With the default options:
 
-| 操作 | 結果 |
+| Action | Result |
 | --- | --- |
-| 入力欄へfocus / click、または待機中に修飾キーなしのEnter | 記録を開始 |
-| `A`、`F1`、`Ctrl + K`、`Shift + A`などを入力 | 有効な組み合わせを即座に確定 |
-| Ctrl / Alt / Shift / Metaだけを入力 | `preview`を更新し、記録を継続 |
-| 記録中に修飾キーなしのEscape | 記録を取り消し、確定済みの値を保持 |
-| 修飾キーなしのBackspace / Delete | 確定済みの値と記録中の候補を削除 |
-| 記録中に入力欄からblur | 候補があれば確定し、なければ取消 |
-| IME変換中の入力、キーのauto-repeat | 記録対象から除外 |
+| Focus or click the input, or press Enter without modifiers while idle | Start recording |
+| Press `A`, `F1`, `Ctrl + K`, `Shift + A`, or another valid combination | Confirm immediately |
+| Press only Ctrl / Alt / Shift / Meta | Update `preview` and keep recording |
+| Press Escape without modifiers while recording | Cancel recording and keep the confirmed value |
+| Press Backspace / Delete without modifiers | Clear the confirmed value and the current candidate |
+| Blur the input while recording | Confirm if there is a candidate; otherwise cancel |
+| Enter keys during IME composition, or hold a key to trigger auto-repeat | Ignore the events |
 
-## 使用例
+## Examples
 
-### 手動で確定する
+### Confirm manually
 
-`confirmOnCapture: false`にすると、入力した組み合わせは`candidate`に保持されます。
-`confirm()`で`value`へ反映し、`cancel()`で確定済みの値を保持したまま候補を破棄します。
+Set `confirmOnCapture: false` to keep the captured combination in `candidate`.
+Call `confirm()` to copy it to `value`, or `cancel()` to discard the candidate while keeping the confirmed value.
 
 ```vue
 <script setup lang="ts">
@@ -108,21 +110,21 @@ const { inputAttrs, candidate, value, isRecording, confirm, cancel } = useRecord
 </script>
 
 <template>
-  <label for="manual-shortcut">ショートカット</label>
+  <label for="manual-shortcut">Shortcut</label>
   <input id="manual-shortcut" ref="shortcutInput" v-bind="inputAttrs" />
-  <button type="button" :disabled="!candidate" @pointerdown.prevent @click="confirm">確定</button>
-  <button type="button" :disabled="!isRecording" @pointerdown.prevent @click="cancel">取消</button>
+  <button type="button" :disabled="!candidate" @pointerdown.prevent @click="confirm">Confirm</button>
+  <button type="button" :disabled="!isRecording" @pointerdown.prevent @click="cancel">Cancel</button>
   <pre>{{ value }}</pre>
 </template>
 ```
 
-ボタンの`@pointerdown.prevent`は、クリック前に入力欄のfocusが外れるのを防ぎます。
-既定の`confirmOnBlur: true`では、Tabなどで入力欄から移動した場合も候補が確定します。
-`confirmOnBlur: false`にすると、blur時には記録が取り消されます。
+The buttons use `@pointerdown.prevent` to keep the input from losing focus before the click.
+With the default `confirmOnBlur: true`, moving focus away from the input also confirms the candidate.
+Set `confirmOnBlur: false` to cancel recording on blur instead.
 
-### 入力条件とコールバックを設定する
+### Configure input rules and callbacks
 
-クイックスタートの`useRecordHotkey()`に渡すオプションを、次のように変更します。
+Replace the options passed to `useRecordHotkey()` in the quick start with:
 
 ```ts
 const { inputAttrs, value, isRecording, error, clear } = useRecordHotkey(inputRef, {
@@ -130,10 +132,10 @@ const { inputAttrs, value, isRecording, error, clear } = useRecordHotkey(inputRe
   requireModifierForPrintable: true,
   disallow: ["Ctrl+S", "Meta+Q"],
   onConfirm(shortcut) {
-    console.log("確定したショートカット", shortcut);
+    console.log("Confirmed shortcut", shortcut);
   },
   onClear() {
-    console.log("ショートカットを削除しました");
+    console.log("Shortcut cleared");
   },
   onError(error) {
     console.error(error.code, error.message);
@@ -141,14 +143,14 @@ const { inputAttrs, value, isRecording, error, clear } = useRecordHotkey(inputRe
 });
 ```
 
-この設定では文字キーにCtrl / Alt / Metaのいずれかが必要となり、Shiftだけでは条件を満たしません。
-`allowedModifiers`からAltを除いているため、この例で文字キーに使えるのはCtrlまたはMetaです。
-F1などの非文字キーにも修飾キーを要求する場合は、`allowUnmodifiedNonPrintable: false`を追加します。
-`disallow`の既定値は空配列で、ライブラリ共通の禁止リストはありません。
+This configuration requires Ctrl, Alt, or Meta for printable keys; Shift alone is not enough.
+Because Alt is excluded from `allowedModifiers`, printable keys in this example require Ctrl or Meta.
+To require modifiers for non-printable keys such as F1 as well, add `allowUnmodifiedNonPrintable: false`.
+The default `disallow` value is an empty array; the library has no built-in list of forbidden shortcuts.
 
-### 記録した値をOS別に表示する
+### Format a recorded shortcut for each OS
 
-保存には`RecordedHotkey`を使い、表示時に`useHotkeyFormatter()`で文字列へ変換します。
+Use `RecordedHotkey` for storage and `useHotkeyFormatter()` to produce a display string.
 
 ```ts
 import { useHotkeyFormatter, type RecordedHotkey } from "v-record-hotkey";
@@ -167,18 +169,18 @@ windows.format(shortcut); // "Ctrl + Shift + K"
 mac.format(shortcut); // "⌃⇧K"
 ```
 
-`format()`には確定値だけでなく`HotkeyPreview`も渡せます。
-文字列への変換は表示用です。
-キー入力との照合には、元の`RecordedHotkey`を使用してください。
+`format()` accepts both confirmed values and `HotkeyPreview`.
+The resulting string is for display.
+Use the original `RecordedHotkey` when matching keyboard events.
 
-## APIリファレンス
+## API reference
 
-| API | 用途 |
+| API | Purpose |
 | --- | --- |
-| `useRecordHotkey()` | input / textareaでの記録、表示、確定、取消、削除 |
-| `useHotkeyRecorder()` | 任意の`EventTarget`でのキー記録 |
-| `useHotkeyFormatter()` | 記録値とプレビューの表示 |
-| `matchHotkey()` | `KeyboardEvent`と記録値の照合 |
+| `useRecordHotkey()` | Record, display, confirm, cancel, and clear shortcuts in an input / textarea |
+| `useHotkeyRecorder()` | Record keys on any `EventTarget` |
+| `useHotkeyFormatter()` | Format recorded shortcuts and previews |
+| `matchHotkey()` | Match a `KeyboardEvent` against a recorded shortcut |
 
 ### `useRecordHotkey(inputRef, options?)`
 
@@ -189,118 +191,120 @@ function useRecordHotkey(
 ): UseRecordHotkeyReturn;
 ```
 
-`inputRef`は入力要素、Vueのref、または要素を返すgetterを受け取ります。
-コンポーネントの`setup`内で呼び出すと、スコープの破棄時にイベントリスナーを解除します。
+`inputRef` accepts an input element, a Vue ref, or a getter that returns the element.
+When called inside a component's `setup`, event listeners are removed when the scope is disposed.
 
-#### オプション
+#### Options
 
-| オプション | 型 | 既定値 | 説明 |
+| Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `initial` | `RecordedHotkey \| null` | `null` | 初期値。作成時に複製し、`reset()`時に復元 |
-| `disallow` | `Array<string \| RecordedHotkey>` | `[]` | 拒否する組み合わせ |
-| `allowedModifiers` | `ModKey[]` | `["Ctrl", "Alt", "Shift", "Meta"]` | 許可する修飾キー |
-| `requireModifierForPrintable` | `boolean` | `false` | 文字キーにCtrl / Alt / Metaを要求 |
-| `allowUnmodifiedNonPrintable` | `boolean` | `true` | F1などの非文字キーを修飾キーなしで許可 |
-| `startOnFocus` | `boolean` | `true` | focusで記録開始 |
-| `startOnClick` | `boolean` | `true` | clickで記録開始 |
-| `startOnEnter` | `boolean` | `true` | 待機中に修飾キーなしのEnterで記録開始 |
-| `confirmOnCapture` | `boolean` | `true` | 有効な入力を得た時点で確定 |
-| `confirmOnBlur` | `boolean` | `true` | blur時に候補があれば確定。`false`なら取消 |
-| `cancelOnEscape` | `boolean` | `true` | 記録中に修飾キーなしのEscapeで取消 |
-| `clearKeys` | `string[]` | `["Backspace", "Delete"]` | 修飾キーなしで押したときに値を削除するキー。空配列で無効化 |
-| `placeholder` | `string` | `undefined` | 入力欄のplaceholder |
-| `formatOptions` | `UseHotkeyFormatterOptions` | `undefined` | OSなどの表示設定 |
+| `initial` | `RecordedHotkey \| null` | `null` | Initial value; cloned on creation and restored by `reset()` |
+| `disallow` | `Array<string \| RecordedHotkey>` | `[]` | Combinations to reject |
+| `allowedModifiers` | `ModKey[]` | `["Ctrl", "Alt", "Shift", "Meta"]` | Allowed modifier keys |
+| `requireModifierForPrintable` | `boolean` | `false` | Require Ctrl / Alt / Meta for printable keys |
+| `allowUnmodifiedNonPrintable` | `boolean` | `true` | Allow non-printable keys such as F1 without modifiers |
+| `startOnFocus` | `boolean` | `true` | Start recording on focus |
+| `startOnClick` | `boolean` | `true` | Start recording on click |
+| `startOnEnter` | `boolean` | `true` | Start recording on Enter without modifiers while idle |
+| `confirmOnCapture` | `boolean` | `true` | Confirm as soon as a valid combination is captured |
+| `confirmOnBlur` | `boolean` | `true` | Confirm the candidate on blur; cancel if `false` |
+| `cancelOnEscape` | `boolean` | `true` | Cancel on Escape without modifiers while recording |
+| `clearKeys` | `string[]` | `["Backspace", "Delete"]` | Keys that clear the value when pressed without modifiers; an empty array disables this |
+| `placeholder` | `string` | `undefined` | Input placeholder |
+| `formatOptions` | `UseHotkeyFormatterOptions` | `undefined` | Display options such as the OS |
 
-設定はcomposable作成時に読み取ります。
-`initial`の更新やオプションの切り替えを反映する場合は、composableを作り直してください。
+Options are read when the composable is created.
+Recreate the composable to apply a new `initial` value or different options.
 
-#### コールバック
+#### Callbacks
 
-すべて省略可能です。
+All callbacks are optional.
 
-| オプション | 型 | 呼び出し条件 |
+| Option | Type | Called when |
 | --- | --- | --- |
-| `onStart` | `() => void` | 記録開始時 |
-| `onConfirm` | `(value: RecordedHotkey) => void` | 候補を確定したとき。確定値の複製を受け取る |
-| `onCancel` | `() => void` | 記録状態、候補、プレビュー、エラーのいずれかを取り消したとき |
-| `onClear` | `() => void` | 確定済みの値を削除したとき |
-| `onError` | `(error: HotkeyRecordError) => void` | 記録を開始できない、または入力条件を満たさないとき |
+| `onStart` | `() => void` | Recording starts |
+| `onConfirm` | `(value: RecordedHotkey) => void` | A candidate is confirmed; receives a clone of the confirmed value |
+| `onCancel` | `() => void` | Recording, a candidate, a preview, or an error is canceled |
+| `onClear` | `() => void` | A confirmed value is cleared |
+| `onError` | `(error: HotkeyRecordError) => void` | Recording cannot start or input does not meet the configured rules |
 
-#### 戻り値
+#### Return value
 
-| プロパティ | 型 | 説明 |
+| Property | Type | Description |
 | --- | --- | --- |
-| `value` | `Ref<RecordedHotkey \| null>` | 確定済みの値 |
-| `candidate` | `Ref<RecordedHotkey \| null>` | 確定前の候補。自動確定後は`null` |
-| `preview` | `Ref<HotkeyPreview \| null>` | 修飾キーだけを押している途中状態 |
-| `error` | `Ref<HotkeyRecordError \| null>` | 記録エラー |
-| `isRecording` | `Ref<boolean>` | 記録中かどうか |
-| `displayValue` | `ComputedRef<string>` | 候補、プレビュー、確定値の順で選んだ表示文字列 |
-| `inputAttrs` | `ComputedRef<UseRecordHotkeyInputAttrs>` | 入力欄へ渡す属性 |
-| `start` | `() => void` | 記録を開始し、入力欄へfocus |
-| `confirm` | `() => void` | 候補を確定。候補がなければ記録停止 |
-| `cancel` | `() => void` | 候補と記録状態を破棄し、確定済みの値を保持 |
-| `clear` | `() => void` | 確定値を`null`にし、記録状態を破棄 |
-| `reset` | `() => void` | 記録状態を破棄し、確定値を作成時の`initial`へ戻す |
+| `value` | `Ref<RecordedHotkey \| null>` | Confirmed value |
+| `candidate` | `Ref<RecordedHotkey \| null>` | Candidate awaiting confirmation; `null` after automatic confirmation |
+| `preview` | `Ref<HotkeyPreview \| null>` | Intermediate state while only modifier keys are pressed |
+| `error` | `Ref<HotkeyRecordError \| null>` | Recording error |
+| `isRecording` | `Ref<boolean>` | Whether recording is active |
+| `displayValue` | `ComputedRef<string>` | Display string, using the candidate, preview, or confirmed value in that order |
+| `inputAttrs` | `ComputedRef<UseRecordHotkeyInputAttrs>` | Attributes to bind to the input |
+| `start` | `() => void` | Start recording and focus the input |
+| `confirm` | `() => void` | Confirm the candidate; stop recording if there is no candidate |
+| `cancel` | `() => void` | Discard the candidate and recording state, keeping the confirmed value |
+| `clear` | `() => void` | Set the confirmed value to `null` and discard the recording state |
+| `reset` | `() => void` | Discard the recording state and restore the original `initial` value |
 
-`inputAttrs`は`value`、`readonly: true`、`autocomplete: "off"`、`spellcheck: false`、`placeholder`を含みます。
-エラー時は`aria-invalid: "true"`も付与します。
-`reset()`は`onConfirm`、`onCancel`、`onClear`を呼び出しません。
+`inputAttrs` includes `value`, `readonly: true`, `autocomplete: "off"`, `spellcheck: false`, and `placeholder`.
+When there is an error, it also includes `aria-invalid: "true"`.
+`reset()` does not call `onConfirm`, `onCancel`, or `onClear`.
 
 ### `useHotkeyRecorder(options?)`
 
-入力欄以外の要素や`window`で記録するための低レベルAPIです。
-確定値の管理やEscapeによる取消などの入力欄向け操作は、`useRecordHotkey()`が担当します。
+A lower-level API for recording keys on elements other than inputs, or on `window`.
+`useRecordHotkey()` handles confirmed values and input-specific actions such as cancellation with Escape.
 
 ```ts
 import { useHotkeyRecorder } from "v-record-hotkey";
 
-// コンポーネントのsetup内で呼び出します。
+// Call inside a component's setup.
 const { isRecording, candidate, preview, error, start, stop, reset } = useHotkeyRecorder({
   onCapture(shortcut) {
-    console.log("記録したショートカット", shortcut);
+    console.log("Recorded shortcut", shortcut);
   },
 });
 ```
 
-`start()`を呼ぶまで記録しません。
-既定では最初の有効な組み合わせを`candidate`へ記録して停止し、`stop()`は候補を保持、`reset()`は候補も削除します。
-コンポーネントのスコープを破棄するとリスナーを解除します。
+Recording does not begin until `start()` is called.
+By default, the first valid combination is stored in `candidate` and recording stops.
+`stop()` keeps the candidate; `reset()` clears it.
+Listeners are removed when the component's scope is disposed.
 
-`disallow`、`allowedModifiers`、`requireModifierForPrintable`、`allowUnmodifiedNonPrintable`、`onStart`、`onError`は`useRecordHotkey()`と共通です。
-追加のオプションは次のとおりです。
+`disallow`, `allowedModifiers`, `requireModifierForPrintable`, `allowUnmodifiedNonPrintable`, `onStart`, and `onError` are shared with `useRecordHotkey()`.
+Additional options:
 
-| オプション | 型 | 既定値 | 説明 |
+| Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `target` | `MaybeRefOrGetter<EventTarget \| null \| undefined>` | `window` | 記録対象。ブラウザ外では`null` |
-| `enabled` | `MaybeRefOrGetter<boolean>` | `true` | 記録の有効状態。`false`になると記録停止 |
-| `ignoreComposition` | `boolean` | `true` | IME変換中のイベントを無視 |
-| `ignoreInEditable` | `boolean` | `true` | 編集可能なinput / textarea / contenteditable内の入力を無視 |
-| `eventFilter` | `(event: KeyboardEvent) => boolean` | `() => true` | `false`を返すイベントを無視 |
-| `preventDefault` | `boolean \| ((event: KeyboardEvent) => boolean)` | `true` | 記録対象のイベントの既定動作を抑制 |
-| `stopPropagation` | `boolean \| ((event: KeyboardEvent) => boolean)` | `false` | 記録対象のイベントの伝播を停止 |
-| `captureStopsRecording` | `boolean` | `true` | 有効な組み合わせを記録したら停止 |
-| `onPreview` | `(current: HotkeyPreview \| null) => void` | `undefined` | 修飾キープレビューの更新を通知 |
-| `onCapture` | `(result: RecordedHotkey) => void` | `undefined` | 記録結果の複製を通知 |
+| `target` | `MaybeRefOrGetter<EventTarget \| null \| undefined>` | `window` | Recording target; `null` outside the browser |
+| `enabled` | `MaybeRefOrGetter<boolean>` | `true` | Whether recording is enabled; recording stops when it becomes `false` |
+| `ignoreComposition` | `boolean` | `true` | Ignore events during IME composition |
+| `ignoreInEditable` | `boolean` | `true` | Ignore input inside editable input / textarea / contenteditable elements |
+| `eventFilter` | `(event: KeyboardEvent) => boolean` | `() => true` | Ignore events when this returns `false` |
+| `preventDefault` | `boolean \| ((event: KeyboardEvent) => boolean)` | `true` | Prevent the default action of recorded events |
+| `stopPropagation` | `boolean \| ((event: KeyboardEvent) => boolean)` | `false` | Stop propagation of recorded events |
+| `captureStopsRecording` | `boolean` | `true` | Stop recording after capturing a valid combination |
+| `onPreview` | `(current: HotkeyPreview \| null) => void` | `undefined` | Notify when the modifier preview changes |
+| `onCapture` | `(result: RecordedHotkey) => void` | `undefined` | Notify with a clone of the captured shortcut |
 
-`target`と`enabled`はrefまたはgetterでも指定できます。
-`target`は`start()`時に評価するため、記録中に対象を変更する場合は`stop()`してから`start()`し直してください。
-戻り値は`isRecording`、`candidate`、`preview`、`error`のrefと、`start`、`stop`、`reset`です。
+`target` and `enabled` also accept refs or getters.
+`target` is evaluated when `start()` is called.
+To change the target while recording, call `stop()` and then `start()` again.
+Returns the `isRecording`, `candidate`, `preview`, and `error` refs, plus `start`, `stop`, and `reset`.
 
 ### `useHotkeyFormatter(options?)`
 
-`{ format }`を返します。
-`format(hotkey: RecordedHotkey | HotkeyPreview): string`で表示文字列を作ります。
+Returns `{ format }`.
+Call `format(hotkey: RecordedHotkey | HotkeyPreview): string` to produce a display string.
 
-| オプション | 型 | 既定値 | 説明 |
+| Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `os` | `"auto" \| "mac" \| "win"` | `"auto"` | OSを自動判定、または明示。Windows/Linuxは`"win"` |
-| `showShiftImplicit` | `boolean` | `false` | Shiftで変わる記号を補記。例：`Shift + 1 ( ! )` |
+| `os` | `"auto" \| "mac" \| "win"` | `"auto"` | Detect the OS automatically or set it explicitly; use `"win"` for Windows/Linux |
+| `showShiftImplicit` | `boolean` | `false` | Include the symbol produced with Shift, for example `Shift + 1 ( ! )` |
 
 ### `matchHotkey(event, target, options?)`
 
-`KeyboardEvent`と`RecordedHotkey`が一致するかを返す関数です。
-イベントリスナーの登録やコマンドの実行はアプリ側で行います。
+Returns whether a `KeyboardEvent` matches a `RecordedHotkey`.
+Your application registers event listeners and runs commands.
 
 ```ts
 import { matchHotkey, type RecordedHotkey } from "v-record-hotkey";
@@ -310,23 +314,23 @@ function handleShortcut(event: KeyboardEvent, shortcut: RecordedHotkey) {
 
   if (matchHotkey(event, shortcut)) {
     event.preventDefault();
-    console.log("ショートカットが一致しました");
+    console.log("Shortcut matched");
   }
 }
 ```
 
-登録したリスナーは、コンポーネントの破棄時に解除してください。
-入力欄や記録中のイベントを実行対象にするかも、アプリ側で判断します。
+Remove registered listeners when the component is disposed.
+Your application also decides whether to run shortcuts from input fields or during recording.
 
-| オプション | 型 | 既定値 | 説明 |
+| Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `compareKey` | `boolean` | `false` | `code`と修飾キーに加え、`key`も大文字小文字を区別せず比較 |
-| `compareLocation` | `boolean` | `false` | `code`と修飾キーに加え、`location`も比較 |
+| `compareKey` | `boolean` | `false` | Compare `key` case-insensitively in addition to `code` and modifiers |
+| `compareLocation` | `boolean` | `false` | Compare `location` in addition to `code` and modifiers |
 
-既定では`code`と修飾キーの集合が一致した場合に`true`を返します。
-修飾キーが余分に押されている場合は一致しません。
+By default, matching requires the same `code` and the same set of modifiers.
+Events with extra modifiers do not match.
 
-### データ型とエラー
+### Data types and errors
 
 ```ts
 type ModKey = "Ctrl" | "Alt" | "Shift" | "Meta";
@@ -345,30 +349,32 @@ interface HotkeyPreview {
 }
 ```
 
-`code`は物理的なキー位置（例：`"KeyK"`）、`key`は配列や修飾キーを反映した入力文字（例：`"k"`）です。
-`location`は`KeyboardEvent.location`の値です。
-formatterは主に`code`からラベルを作り、修飾キーだけのプレビューでは`code`と`key`が`null`になります。
+`code` identifies the physical key position, such as `"KeyK"`.
+`key` is the input character after applying the keyboard layout and modifiers, such as `"k"`.
+`location` is the value of `KeyboardEvent.location`.
+The formatter derives labels primarily from `code`.
+For modifier-only previews, `code` and `key` are `null`.
 
-`error`と`onError`は`{ code, message }`形式の`HotkeyRecordError`を返します。
+`error` and `onError` provide a `HotkeyRecordError` in the form `{ code, message }`.
 
-| `code` | 原因 |
+| `code` | Cause |
 | --- | --- |
-| `invalid-target` | 開始時に有効なイベント対象がない。入力要素のmount前など |
-| `disabled` | `useHotkeyRecorder()`の`enabled`が`false`の状態で開始 |
-| `modifier-not-allowed` | `allowedModifiers`に含まれない修飾キーを入力 |
-| `missing-modifier` | 必須の修飾キーが不足 |
-| `disallowed` | `disallow`に該当する組み合わせを入力 |
+| `invalid-target` | No valid event target when recording starts, for example before the input is mounted |
+| `disabled` | Recording is started while `useHotkeyRecorder()` has `enabled` set to `false` |
+| `modifier-not-allowed` | A modifier outside `allowedModifiers` is pressed |
+| `missing-modifier` | A required modifier is missing |
+| `disallowed` | The combination matches an entry in `disallow` |
 
-型はすべてパッケージから`import type`できます。
+All types can be imported from the package with `import type`.
 
-## 制約と注意点
+## Limitations and notes
 
-- 対応するのは単一のキーコンビネーションです。`Ctrl + K`の後に`Ctrl + C`を押すような複数ストロークのシーケンスと、タイムアウト確定は未実装です。
-- OSやブラウザが先に処理するショートカットは、ページ側で受信できない場合があります。
-- 修飾キーだけでは確定しません。`preview`として扱います。
-- `useRecordHotkey()`のEscape、Backspace、Deleteは既定で操作用です。記録対象にする場合は、`cancelOnEscape: false`や`clearKeys: []`を指定してください。
-- 記録とキー照合はブラウザの`KeyboardEvent`を使います。SSR中には記録を開始せず、対象要素がmountされた後に開始してください。
+- Only a single key combination is supported. Multi-stroke sequences such as `Ctrl + K` followed by `Ctrl + C` and timeout-based confirmation are not implemented.
+- Shortcuts handled by the OS or browser may never reach the page.
+- Modifier keys alone do not confirm a shortcut; they are exposed as `preview`.
+- In `useRecordHotkey()`, Escape, Backspace, and Delete are reserved for control actions by default. To record them, set `cancelOnEscape: false` or `clearKeys: []` as appropriate.
+- Recording and matching use the browser's `KeyboardEvent`. Do not start recording during SSR; wait until the target element is mounted.
 
-## ライセンス
+## License
 
 MIT
