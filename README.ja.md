@@ -25,19 +25,18 @@ Vue 3のショートカット設定画面向けcomposableライブラリです�
 
 ## インストール
 
-現在はnpm未公開です。
 動作は[デモ](https://nekobato.github.io/v-record-hotkey/)で確認できます。
-公開後のインストールコマンドは次のとおりです。
+パッケージとVueをインストールします。
 
 ```bash
-pnpm add v-record-hotkey vue@3.5.24
+pnpm add v-record-hotkey "vue@>=3.3.0"
 ```
 
 ```bash
-npm install v-record-hotkey vue@3.5.24
+npm install v-record-hotkey "vue@>=3.3.0"
 ```
 
-必要なVueのバージョンは`3.5.24`です。
+Vue `3.3.0`以上が必要です。
 以下の使用例はVue Single-File Component（SFC）の`<script setup lang="ts">`を使用します。
 composableを直接importするため、`app.use()`による登録は不要です。
 
