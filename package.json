@@ -1,6 +1,6 @@
 {
 	"name": "v-record-hotkey",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Vue 3 composables for recording and formatting keyboard shortcuts",
 	"keywords": ["vue", "composition-api", "hotkey", "keyboard", "composables"],
 	"license": "MIT",
@@ -30,7 +30,7 @@
 		"clean": "rimraf dist"
 	},
 	"peerDependencies": {
-		"vue": "3.5.24"
+		"vue": ">=3.3.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
