@@ -1,5 +1,7 @@
 # v-record-hotkey
 
+[![npm version](https://img.shields.io/npm/v/v-record-hotkey.svg)](https://www.npmjs.com/package/v-record-hotkey)
+
 [English](README.md) | 日本語
 
 Vue 3のショートカット設定画面向けcomposableライブラリです。

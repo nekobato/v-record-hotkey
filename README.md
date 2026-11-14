@@ -1,5 +1,7 @@
 # v-record-hotkey
 
+[![npm version](https://img.shields.io/npm/v/v-record-hotkey.svg)](https://www.npmjs.com/package/v-record-hotkey)
+
 English | [日本語](README.ja.md)
 
 Vue 3 composables for keyboard shortcut settings.
