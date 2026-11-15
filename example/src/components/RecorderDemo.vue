@@ -2,14 +2,18 @@
 import { computed, ref, watch } from "vue";
 import { matchHotkey, useHotkeyFormatter, useRecordHotkey } from "v-record-hotkey";
 import type { RecordedHotkey } from "v-record-hotkey";
+import { useDemoI18n } from "../i18n";
+import type { DemoMessages } from "../i18n";
 import type { DemoPreset } from "../presets";
 
 const props = defineProps<{ preset: DemoPreset }>();
+const { messages } = useDemoI18n();
+type DemoEvent = keyof DemoMessages["events"];
 const inputRef = ref<HTMLInputElement | null>(null);
-const history = ref<Array<{ id: number; label: string; detail: string }>>([]);
+const history = ref<Array<{ id: number; type: DemoEvent; detail: string }>>([]);
 let nextId = 0;
-const log = (label: string, detail = "") => {
-	history.value = [{ id: ++nextId, label, detail }, ...history.value].slice(0, 5);
+const log = (type: DemoEvent, detail = "") => {
+	history.value = [{ id: ++nextId, type, detail }, ...history.value].slice(0, 5);
 };
 const initial: RecordedHotkey = { code: "KeyK", key: "k", modifiers: ["Ctrl"], location: 0 };
 const disallow = ["Ctrl+S", "Meta+Q"];
@@ -31,26 +35,22 @@ const {
 	...props.preset.options,
 	initial,
 	disallow,
-	placeholder: "クリックしてキーを入力",
-	onStart: () => log("記録"),
-	onConfirm: (next) => log("確定", windows.format(next)),
-	onCancel: () => log("取消"),
-	onClear: () => log("削除"),
-	onError: (next) => log("拒否", next.code),
+	onStart: () => log("start"),
+	onConfirm: (next) => log("confirm", windows.format(next)),
+	onCancel: () => log("cancel"),
+	onClear: () => log("clear"),
+	onError: (next) => log("error", next.code),
 });
-const errorMessage = computed(() => {
-	if (!error.value) return "";
-	if (error.value.code === "disallowed")
-		return "Ctrl + S / Meta + Q はこのデモでは禁止しています。";
-	if (error.value.code === "missing-modifier") return "Ctrl / Alt / Meta を組み合わせてください。";
-	return error.value.message;
-});
+const errorMessage = computed(() =>
+	error.value ? messages.value.errors[error.value.code] : "",
+);
 const savedWindows = computed(() => (value.value ? windows.format(value.value) : "—"));
 const savedMac = computed(() => (value.value ? mac.format(value.value) : "—"));
 const status = computed(() => {
-	if (error.value) return "入力エラー";
-	if (isRecording.value) return candidate.value ? "候補あり" : "記録中";
-	return value.value ? "確定済み" : "未設定";
+	if (error.value) return messages.value.status.error;
+	if (isRecording.value)
+		return candidate.value ? messages.value.status.candidate : messages.value.status.recording;
+	return value.value ? messages.value.status.saved : messages.value.status.unset;
 });
 const stateJson = computed(() =>
 	JSON.stringify(
@@ -73,7 +73,7 @@ const tryShortcut = (event: KeyboardEvent) => {
 	if (lastMatch.value) {
 		event.preventDefault();
 		matches.value += 1;
-		log("照合", savedWindows.value);
+		log("match", savedWindows.value);
 	}
 };
 watch(value, () => {
@@ -83,59 +83,59 @@ watch(value, () => {
 });
 const restoreInitial = () => {
 	reset();
-	log("リセット", windows.format(initial));
+	log("reset", windows.format(initial));
 };
 </script>
 
 <template>
 	<div class="recorder">
 		<div class="field-head">
-			<label for="shortcut-input">ショートカット</label>
+			<label for="shortcut-input">{{ messages.recorder.label }}</label>
 			<span class="status" :class="{ 'is-recording': isRecording, 'has-error': error }" role="status">{{ status }}</span>
 		</div>
-		<input id="shortcut-input" ref="inputRef" class="shortcut" v-bind="inputAttrs" aria-describedby="shortcut-help shortcut-error" />
-		<p id="shortcut-help" class="hint">{{ preset.hint }}</p>
+		<input id="shortcut-input" ref="inputRef" class="shortcut" v-bind="inputAttrs" :placeholder="messages.recorder.placeholder" aria-describedby="shortcut-help shortcut-error" />
+		<p id="shortcut-help" class="hint">{{ messages.presets[preset.id].hint }}</p>
 		<p id="shortcut-error" class="error" role="alert">{{ errorMessage }}</p>
 		<div class="actions">
-			<button type="button" class="primary" :disabled="isRecording" @pointerdown.prevent @click="start">記録開始</button>
-			<button v-if="preset.id === 'manual'" type="button" class="primary" :disabled="!candidate" @pointerdown.prevent @click="confirm">確定</button>
-			<button v-if="isRecording" type="button" @pointerdown.prevent @click="cancel">取消</button>
-			<button type="button" :disabled="!value && !isRecording" @pointerdown.prevent @click="clear">削除</button>
-			<button type="button" class="quiet" @pointerdown.prevent @click="restoreInitial">リセット</button>
+			<button type="button" class="primary" :disabled="isRecording" @pointerdown.prevent @click="start">{{ messages.recorder.start }}</button>
+			<button v-if="preset.id === 'manual'" type="button" class="primary" :disabled="!candidate" @pointerdown.prevent @click="confirm">{{ messages.recorder.confirm }}</button>
+			<button v-if="isRecording" type="button" @pointerdown.prevent @click="cancel">{{ messages.recorder.cancel }}</button>
+			<button type="button" :disabled="!value && !isRecording" @pointerdown.prevent @click="clear">{{ messages.recorder.clear }}</button>
+			<button type="button" class="quiet" @pointerdown.prevent @click="restoreInitial">{{ messages.recorder.reset }}</button>
 		</div>
-		<p class="commands"><kbd>Esc</kbd> 取消 <span>·</span> <kbd>Backspace</kbd> / <kbd>Delete</kbd> 削除</p>
-		<section class="result" aria-label="記録結果">
+		<p class="commands"><kbd>Esc</kbd> {{ messages.recorder.cancel }} <span>·</span> <kbd>Backspace</kbd> / <kbd>Delete</kbd> {{ messages.recorder.clear }}</p>
+		<section class="result" :aria-label="messages.recorder.result">
 			<dl class="formats">
 				<div><dt>Windows / Linux</dt><dd data-testid="saved-value">{{ savedWindows }}</dd></div>
 				<div><dt>macOS</dt><dd>{{ savedMac }}</dd></div>
 			</dl>
 		</section>
 		<details class="inspector">
-			<summary>Details</summary>
+			<summary>{{ messages.recorder.details }}</summary>
 			<div class="inspector-grid">
 				<section aria-labelledby="state-title">
-					<h3 id="state-title">State</h3>
+					<h3 id="state-title">{{ messages.recorder.state }}</h3>
 					<pre data-testid="state-json">{{ stateJson }}</pre>
 				</section>
 				<div>
 					<section class="tester" aria-labelledby="tester-title">
 						<h3 id="tester-title">matchHotkey</h3>
-						<p id="test-help" class="hint">ここを選んで、記録したキーを入力。</p>
-						<div id="test-shortcut" class="test-surface" :class="{ 'is-matched': tried && lastMatch }" tabindex="0" role="group" aria-label="ショートカット照合領域" aria-describedby="test-help" @keydown="tryShortcut">
-							<span>{{ !value ? "未設定" : tried ? lastMatch ? "一致" : "不一致" : "キーを入力" }}</span>
-							<span class="match-count" role="status">一致 <strong>{{ matches }}</strong> 回</span>
+						<p id="test-help" class="hint">{{ messages.tester.hint }}</p>
+						<div id="test-shortcut" class="test-surface" :class="{ 'is-matched': tried && lastMatch }" tabindex="0" role="group" :aria-label="messages.tester.label" aria-describedby="test-help" @keydown="tryShortcut">
+							<span>{{ !value ? messages.status.unset : tried ? lastMatch ? messages.tester.matched : messages.tester.unmatched : messages.tester.prompt }}</span>
+							<span class="match-count" role="status">{{ messages.tester.matches }} <strong>{{ matches }}</strong> {{ messages.tester.times }}</span>
 						</div>
 					</section>
 					<section class="history" aria-labelledby="history-title">
-						<h3 id="history-title">Events</h3>
+						<h3 id="history-title">{{ messages.recorder.events }}</h3>
 						<ol v-if="history.length" class="event-list">
-							<li v-for="event in history" :key="event.id"><span>{{ event.label }}</span><code>{{ event.detail || "—" }}</code></li>
+							<li v-for="event in history" :key="event.id"><span>{{ messages.events[event.type] }}</span><code>{{ event.detail || "—" }}</code></li>
 						</ol>
 						<p v-else class="hint">—</p>
 					</section>
 				</div>
 				<section class="options" aria-labelledby="options-title">
-					<h3 id="options-title">Options</h3>
+					<h3 id="options-title">{{ messages.recorder.options }}</h3>
 					<pre>{{ optionsJson }}</pre>
 				</section>
 			</div>

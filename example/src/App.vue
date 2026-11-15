@@ -1,9 +1,21 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watchEffect } from "vue";
+import LanguagePicker from "./components/LanguagePicker.vue";
 import RecorderDemo from "./components/RecorderDemo.vue";
+import { useDemoI18n } from "./i18n";
 import { presets } from "./presets";
+import type { DemoPreset } from "./presets";
 
-const selected = ref("basic");
+const { locale, messages } = useDemoI18n();
+watchEffect(() => {
+	document.documentElement.lang = locale.value;
+	document.title = messages.value.app.title;
+	document
+		.querySelector<HTMLMetaElement>('meta[name="description"]')
+		?.setAttribute("content", messages.value.app.description);
+});
+
+const selected = ref<DemoPreset["id"]>("basic");
 const preset = computed(() => presets.find((item) => item.id === selected.value) ?? presets[0]);
 const usage = [
 	'<script setup lang="ts">',
@@ -22,34 +34,37 @@ const usage = [
 
 <template>
 	<div class="page">
-		<a class="skip-link" href="#demo">Demoへ移動</a>
+		<a class="skip-link" href="#demo">{{ messages.app.skipToDemo }}</a>
 		<header class="intro">
 			<div class="title-row">
 				<h1>v-record-hotkey</h1>
-				<nav aria-label="関連リンク">
-					<a href="https://github.com/nekobato/v-record-hotkey">GitHub</a>
-					<a href="https://github.com/nekobato/v-record-hotkey#readme">README</a>
-				</nav>
+				<div class="header-actions">
+					<nav :aria-label="messages.app.relatedLinks">
+						<a href="https://github.com/nekobato/v-record-hotkey">GitHub</a>
+						<a :href="locale === 'ja' ? 'https://github.com/nekobato/v-record-hotkey/blob/main/README.ja.md' : 'https://github.com/nekobato/v-record-hotkey#readme'">README</a>
+					</nav>
+					<LanguagePicker />
+				</div>
 			</div>
-			<p>Vue 3のショートカット入力用composable。</p>
+			<p>{{ messages.app.tagline }}</p>
 		</header>
 		<main>
 			<section id="demo" class="demo-section" aria-labelledby="demo-title">
 				<div class="section-head">
-					<h2 id="demo-title">Demo</h2>
+					<h2 id="demo-title">{{ messages.app.demo }}</h2>
 					<fieldset class="presets">
-						<legend class="visually-hidden">入力設定</legend>
+						<legend class="visually-hidden">{{ messages.app.inputSettings }}</legend>
 						<label v-for="item in presets" :key="item.id" class="preset" :class="{ 'is-selected': selected === item.id }">
 							<input v-model="selected" type="radio" name="preset" :value="item.id" />
-							<span>{{ item.label }}</span>
+							<span>{{ messages.presets[item.id].label }}</span>
 						</label>
 					</fieldset>
 				</div>
 				<RecorderDemo :key="preset.id" :preset="preset" />
-				<p class="keyboard-note">物理キーボードで操作してください。</p>
+				<p class="keyboard-note">{{ messages.app.keyboardNote }}</p>
 			</section>
 			<section class="usage" aria-labelledby="usage-title">
-				<h2 id="usage-title">Usage</h2>
+				<h2 id="usage-title">{{ messages.app.usage }}</h2>
 				<pre class="code-block"><code>{{ usage }}</code></pre>
 			</section>
 		</main>
@@ -60,6 +75,7 @@ const usage = [
 .page { max-width: 848px; margin-inline: auto; padding: 64px 24px; }
 .intro { margin-bottom: 44px; }
 .title-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; }
+.header-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; }
 h1 { margin: 0; font: 650 clamp(1.625rem, 4vw, 2.25rem)/1.3 var(--mono); letter-spacing: -0.05em; }
 .intro p { margin: 12px 0 0; color: var(--muted); font-size: 1rem; }
 nav { display: flex; gap: 20px; }
@@ -84,6 +100,7 @@ h2 { margin: 0; font-size: 1rem; font-weight: 650; }
 	.page { padding: 32px 20px 40px; }
 	.intro { margin-bottom: 28px; }
 	.title-row { align-items: start; flex-direction: column; gap: 4px; }
+	.header-actions { width: 100%; justify-content: space-between; gap: 8px 16px; }
 	nav { gap: 20px; }
 	.intro p { margin-top: 8px; font-size: 0.875rem; }
 	.section-head { align-items: start; flex-direction: column; gap: 12px; }
