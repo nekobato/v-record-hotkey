@@ -48,14 +48,15 @@ Import the composables directly; no `app.use()` registration is needed.
 ## Quick start
 
 Add the following to a Vue component.
+These examples use `ref()` for Vue 3.3 compatibility; the template ref name must match `inputRef`.
 Click the input and press a shortcut such as `Ctrl + K` to confirm it.
 
 ```vue
 <script setup lang="ts">
-import { useTemplateRef } from "vue";
+import { ref } from "vue";
 import { useRecordHotkey } from "v-record-hotkey";
 
-const inputRef = useTemplateRef<HTMLInputElement>("shortcutInput");
+const inputRef = ref<HTMLInputElement | null>(null);
 const { inputAttrs, value, isRecording, error, clear } = useRecordHotkey(inputRef, {
   placeholder: "Click and press a key",
 });
@@ -65,7 +66,7 @@ const { inputAttrs, value, isRecording, error, clear } = useRecordHotkey(inputRe
   <label for="shortcut">Shortcut</label>
   <input
     id="shortcut"
-    ref="shortcutInput"
+    ref="inputRef"
     v-bind="inputAttrs"
     aria-describedby="shortcut-help shortcut-error"
   />
@@ -104,10 +105,10 @@ Call `confirm()` to copy it to `value`, or `cancel()` to discard the candidate w
 
 ```vue
 <script setup lang="ts">
-import { useTemplateRef } from "vue";
+import { ref } from "vue";
 import { useRecordHotkey } from "v-record-hotkey";
 
-const inputRef = useTemplateRef<HTMLInputElement>("shortcutInput");
+const inputRef = ref<HTMLInputElement | null>(null);
 const { inputAttrs, candidate, value, isRecording, confirm, cancel } = useRecordHotkey(inputRef, {
   confirmOnCapture: false,
 });
@@ -115,7 +116,7 @@ const { inputAttrs, candidate, value, isRecording, confirm, cancel } = useRecord
 
 <template>
   <label for="manual-shortcut">Shortcut</label>
-  <input id="manual-shortcut" ref="shortcutInput" v-bind="inputAttrs" />
+  <input id="manual-shortcut" ref="inputRef" v-bind="inputAttrs" />
   <button type="button" :disabled="!candidate" @pointerdown.prevent @click="confirm">Confirm</button>
   <button type="button" :disabled="!isRecording" @pointerdown.prevent @click="cancel">Cancel</button>
   <pre>{{ value }}</pre>
