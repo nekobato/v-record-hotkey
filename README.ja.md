@@ -48,14 +48,15 @@ composableを直接importするため、`app.use()`による登録は不要で�
 ## クイックスタート
 
 次の内容をVueコンポーネントに置きます。
+Vue 3.3でも使えるように`ref()`を使用し、テンプレートのref名を変数名`inputRef`に合わせています。
 入力欄をクリックして`Ctrl + K`などを押すと、その組み合わせが確定します。
 
 ```vue
 <script setup lang="ts">
-import { useTemplateRef } from "vue";
+import { ref } from "vue";
 import { useRecordHotkey } from "v-record-hotkey";
 
-const inputRef = useTemplateRef<HTMLInputElement>("shortcutInput");
+const inputRef = ref<HTMLInputElement | null>(null);
 const { inputAttrs, value, isRecording, error, clear } = useRecordHotkey(inputRef, {
   placeholder: "クリックしてキーを入力",
 });
@@ -65,7 +66,7 @@ const { inputAttrs, value, isRecording, error, clear } = useRecordHotkey(inputRe
   <label for="shortcut">ショートカット</label>
   <input
     id="shortcut"
-    ref="shortcutInput"
+    ref="inputRef"
     v-bind="inputAttrs"
     aria-describedby="shortcut-help shortcut-error"
   />
@@ -104,10 +105,10 @@ const { inputAttrs, value, isRecording, error, clear } = useRecordHotkey(inputRe
 
 ```vue
 <script setup lang="ts">
-import { useTemplateRef } from "vue";
+import { ref } from "vue";
 import { useRecordHotkey } from "v-record-hotkey";
 
-const inputRef = useTemplateRef<HTMLInputElement>("shortcutInput");
+const inputRef = ref<HTMLInputElement | null>(null);
 const { inputAttrs, candidate, value, isRecording, confirm, cancel } = useRecordHotkey(inputRef, {
   confirmOnCapture: false,
 });
@@ -115,7 +116,7 @@ const { inputAttrs, candidate, value, isRecording, confirm, cancel } = useRecord
 
 <template>
   <label for="manual-shortcut">ショートカット</label>
-  <input id="manual-shortcut" ref="shortcutInput" v-bind="inputAttrs" />
+  <input id="manual-shortcut" ref="inputRef" v-bind="inputAttrs" />
   <button type="button" :disabled="!candidate" @pointerdown.prevent @click="confirm">確定</button>
   <button type="button" :disabled="!isRecording" @pointerdown.prevent @click="cancel">取消</button>
   <pre>{{ value }}</pre>
