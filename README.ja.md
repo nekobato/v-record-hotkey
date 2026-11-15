@@ -1,6 +1,9 @@
 # v-record-hotkey
 
 [![npm version](https://img.shields.io/npm/v/v-record-hotkey.svg)](https://www.npmjs.com/package/v-record-hotkey)
+[![Vue compatibility](https://img.shields.io/npm/dependency-version/v-record-hotkey/peer/vue.svg?label=Vue)](#インストール)
+[![TypeScript types](https://img.shields.io/npm/types/v-record-hotkey.svg)](#apiリファレンス)
+[![License](https://img.shields.io/npm/l/v-record-hotkey.svg)](https://opensource.org/license/mit)
 
 [English](README.md) | 日本語
 
