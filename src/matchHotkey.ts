@@ -5,7 +5,7 @@ const equalsIgnoreCase = (left: string, right: string) =>
 	left.toLowerCase() === right.toLowerCase();
 
 /**
- * `KeyboardEvent` が録画済みショートカットと一致するかを判定いたしますの。
+ * Check whether a keyboard event matches a recorded hotkey.
  *
  * @example
  * ```ts

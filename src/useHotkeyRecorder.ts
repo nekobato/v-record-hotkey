@@ -41,8 +41,8 @@ const shouldApply = (
 };
 
 /**
- * 任意の target で 1 コンボの hotkey を録画する低レベル composable ですわ。
- * input 向けの UX は `useRecordHotkey()` 側で組み立てる前提でございます。
+ * Record a single hotkey combination on an event target.
+ * Use `useRecordHotkey()` for input-specific confirmation, cancellation, and clearing.
  */
 export function useHotkeyRecorder(options: UseHotkeyRecorderOptions = {}): UseHotkeyRecorderReturn {
 	const {

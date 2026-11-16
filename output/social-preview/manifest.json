@@ -1,0 +1,30 @@
+{
+	"asset": ".github/social-preview.png",
+	"width": 1280,
+	"height": 640,
+	"format": "PNG",
+	"bytes": 540704,
+	"sha256": "303e20a1e0c31e29fac9135aef1fc6096532c40f64affded27425aa9b925adb2",
+	"created": "2026-11-16",
+	"screenshot": {
+		"url": "https://nekobato.github.io/v-record-hotkey/",
+		"path": "output/social-preview/demo-recorder.png",
+		"selector": ".recorder",
+		"width": 672,
+		"height": 447,
+		"state": "Control+Shift+K recorded using the actual demo. Input focus removed before capture.",
+		"treatment": "Cropped to the recorder element, scaled, and rotated -1.5 degrees. No screenshot text or UI was regenerated."
+	},
+	"background": {
+		"tool": "Built-in ImageGen (image_gen.imagegen)",
+		"path": "output/social-preview/background.png",
+		"width": 1774,
+		"height": 887,
+		"prompt": "output/social-preview/prompt.txt",
+		"treatment": "Scaled proportionally to the 1280 x 640 canvas."
+	},
+	"composition": "output/social-preview/thumbnail.html",
+	"existingIcon": "example/public/favicon.svg",
+	"export": "Rendered in isolated headless Chrome using Playwright at a 1280 x 640 viewport.",
+	"platformRequirements": "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/customizing-your-repositorys-social-media-preview"
+}

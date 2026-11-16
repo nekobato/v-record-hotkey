@@ -13,7 +13,7 @@ type HotkeyLike = RecordedHotkey | HotkeyPreview;
 const isPrintable = (value: string) => value.length === 1 && value.trim().length > 0;
 
 /**
- * `RecordedHotkey` や modifier preview を OS 別の表記へ整形する helper ですわ。
+ * Format a recorded hotkey or modifier preview for the selected operating system.
  */
 export function useHotkeyFormatter(options: UseHotkeyFormatterOptions = {}) {
 	const { os = "auto", showShiftImplicit = false } = options;

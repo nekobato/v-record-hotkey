@@ -34,7 +34,7 @@ const stopNativePropagation = (event: KeyboardEvent) => {
 };
 
 /**
- * input 要素へ ref を渡すだけで、ショートカット入力欄として扱える高レベル composable ですわ。
+ * Record and manage a keyboard shortcut through an input or textarea element.
  */
 export function useRecordHotkey(
 	inputRef: MaybeRefOrGetter<HotkeyInputElement | null | undefined>,

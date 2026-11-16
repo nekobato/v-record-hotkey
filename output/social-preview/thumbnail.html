@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href="../../example/public/favicon.svg" />
+		<title>v-record-hotkey — GitHub social preview</title>
+		<style>
+			:root {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+				color: #f8fbf5;
+				background: #123d2c;
+				font-synthesis: none;
+				-webkit-font-smoothing: antialiased;
+			}
+			* { box-sizing: border-box; }
+			body { margin: 0; }
+			.cover {
+				position: relative;
+				isolation: isolate;
+				inline-size: 1280px;
+				block-size: 640px;
+				overflow: clip;
+			}
+			.backdrop {
+				position: absolute;
+				inset: 0;
+				z-index: -1;
+				inline-size: 100%;
+				block-size: 100%;
+				object-fit: cover;
+			}
+			.identity {
+				position: absolute;
+				inset: 62px auto auto 64px;
+				display: flex;
+				align-items: center;
+				gap: 13px;
+				color: #c9decf;
+				font-size: 1rem;
+				font-weight: 550;
+				letter-spacing: 0.02em;
+			}
+			.identity img { inline-size: 36px; block-size: 36px; }
+			h1 {
+				position: absolute;
+				inset: 150px auto auto 60px;
+				margin: 0;
+				font-family: ui-monospace, "SFMono-Regular", Menlo, Monaco, monospace;
+				font-size: 4.125rem;
+				font-weight: 700;
+				line-height: 1.16;
+				letter-spacing: -0.065em;
+			}
+			h1 span { display: block; }
+			.description {
+				position: absolute;
+				inset: 333px auto auto 64px;
+				margin: 0;
+				color: #d7e6d9;
+				font-size: 1.625rem;
+				font-weight: 420;
+				line-height: 1.5;
+				letter-spacing: -0.02em;
+			}
+			.api {
+				position: absolute;
+				inset: 449px auto auto 64px;
+				margin: 0;
+				padding: 13px 17px;
+				border: 1px solid #94b69c5e;
+				border-radius: 8px;
+				background: #082e2040;
+				color: #c6e8bc;
+				font-family: ui-monospace, "SFMono-Regular", Menlo, Monaco, monospace;
+				font-size: 0.9375rem;
+				line-height: 1.4;
+			}
+			.api .argument { color: #f1f6ee; }
+			.features {
+				position: absolute;
+				inset: auto auto 61px 64px;
+				display: flex;
+				align-items: center;
+				gap: 11px;
+				margin: 0;
+				color: #b8d1bf;
+				font-size: 0.9375rem;
+				letter-spacing: 0.015em;
+			}
+			.features::before {
+				content: "";
+				inline-size: 6px;
+				block-size: 6px;
+				border-radius: 50%;
+				background: #aed3a0;
+			}
+			.window {
+				position: absolute;
+				inset: 127px 64px auto auto;
+				inline-size: 632px;
+				margin: 0;
+				border: 1px solid #ffffff75;
+				border-radius: 13px;
+				background: #fff;
+				box-shadow: 0 30px 65px #04170f52, 0 5px 14px #04170f28;
+				transform: rotate(-1.5deg);
+				overflow: clip;
+			}
+			.window-bar {
+				display: flex;
+				align-items: center;
+				gap: 18px;
+				padding: 13px 17px;
+				border-block-end: 1px solid #e3e9e3;
+				background: #f5f7f3;
+				color: #738276;
+				font-family: ui-monospace, "SFMono-Regular", Menlo, Monaco, monospace;
+				font-size: 0.625rem;
+				line-height: 1.2;
+			}
+			.dots { display: flex; gap: 5px; }
+			.dots i { inline-size: 6px; block-size: 6px; border-radius: 50%; background: #ccd6cc; }
+			.demo { display: block; inline-size: 100%; block-size: auto; }
+		</style>
+	</head>
+	<body>
+		<main class="cover" aria-label="v-record-hotkey GitHub social preview">
+			<img class="backdrop" src="background.png" alt="" width="1280" height="640" />
+			<div class="identity">
+				<img src="../../example/public/favicon.svg" alt="" width="36" height="36" />
+				<span>Vue 3 · TypeScript</span>
+			</div>
+			<h1 aria-label="v-record-hotkey"><span>v-record-</span><span>hotkey</span></h1>
+			<p class="description">Keyboard shortcut input<br />for Vue 3.</p>
+			<p class="api"><code>useRecordHotkey(<span class="argument">inputRef</span>)</code></p>
+			<p class="features">Record · Format · Match</p>
+			<figure class="window">
+				<div class="window-bar" aria-hidden="true">
+					<span class="dots"><i></i><i></i><i></i></span>
+					<span>nekobato.github.io/v-record-hotkey/</span>
+				</div>
+				<img class="demo" src="demo-recorder.png" alt="Actual demo showing Ctrl + Shift + K on Windows / Linux and macOS" width="672" height="447" />
+			</figure>
+		</main>
+	</body>
+</html>

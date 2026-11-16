@@ -4,6 +4,15 @@
 	"description": "Vue 3 composables for recording and formatting keyboard shortcuts",
 	"keywords": ["vue", "composition-api", "hotkey", "keyboard", "composables"],
 	"license": "MIT",
+	"author": "nekobato",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/nekobato/v-record-hotkey.git"
+	},
+	"homepage": "https://github.com/nekobato/v-record-hotkey#readme",
+	"bugs": {
+		"url": "https://github.com/nekobato/v-record-hotkey/issues"
+	},
 	"packageManager": "pnpm@11.10.0",
 	"type": "module",
 	"main": "dist/index.cjs",
@@ -16,7 +25,11 @@
 			"require": "./dist/index.cjs"
 		}
 	},
-	"files": ["dist"],
+	"files": ["dist", "README.ja.md"],
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org"
+	},
 	"scripts": {
 		"demo": "pnpm --filter v-record-hotkey-example run dev --host 127.0.0.1",
 		"demo:build": "pnpm --filter v-record-hotkey-example run build",
@@ -27,6 +40,8 @@
 		"lint": "biome lint .",
 		"format": "biome format --write .",
 		"typecheck": "vue-tsc --noEmit",
+		"prepublishOnly": "pnpm run test && pnpm run lint && pnpm run typecheck && pnpm exec biome format .",
+		"prepack": "pnpm run build",
 		"clean": "rimraf dist"
 	},
 	"peerDependencies": {

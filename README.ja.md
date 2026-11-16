@@ -378,4 +378,4 @@ formatterは主に`code`からラベルを作り、修飾キーだけのプレ�
 
 ## ライセンス
 
-MIT
+[MIT](LICENSE)

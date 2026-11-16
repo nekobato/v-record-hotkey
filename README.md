@@ -382,4 +382,4 @@ All types can be imported from the package with `import type`.
 
 ## License
 
-MIT
+[MIT](LICENSE)
