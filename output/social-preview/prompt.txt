@@ -1,7 +1,0 @@
-Use case: ads-marketing
-Asset type: background plate for a GitHub repository social preview
-Primary request: a quiet, premium forest-green backdrop for the v-record-hotkey keyboard-shortcut library. Typography, the existing keyboard icon, and a real screenshot of the demo will be composited separately; generate the background only.
-Composition: landscape, exactly 1280 x 640 pixels, 2:1 aspect ratio. Keep the left 45% spacious, dark, smooth, and empty for pale text. Keep the middle-right area empty for a large white demo screenshot. A subtle diffuse softbox light can illuminate the upper right. At the extreme upper-right and bottom-right edges only, show a small cropped hint of an oversized blank sage keyboard keycap with soft sculptural beveled edges, almost abstract and low contrast. The center must remain uncluttered.
-Style: restrained editorial software launch graphic; tactile matte material with extremely fine, nearly invisible paper grain; soft studio lighting, sophisticated understated composition.
-Palette: deep forest green near #123d2c, muted moss and sage; no blue, purple, neon, or saturated lime.
-Constraints: background only. No text, letters, numbers, symbols, key legends, logos, screenshots, user interfaces, browser windows, borders, grids, stars, sparkle, watermark, or decorative line art. Do not generate the title or any copy. Maintain good contrast for pale typography added later.

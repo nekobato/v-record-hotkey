@@ -1,6 +1,8 @@
 node_modules/
 dist/
 coverage/
+/output/
+/prompts/
 .vscode/
 .idea/
 .DS_Store
