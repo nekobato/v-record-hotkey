@@ -31,17 +31,18 @@ You provide the input markup and styles, so it fits into your existing forms.
 ## Installation
 
 You can try it in the [demo](https://nekobato.github.io/v-record-hotkey/).
-Install the package and Vue with:
+Install the package with:
 
 ```bash
-pnpm add v-record-hotkey "vue@>=3.3.0"
+pnpm add v-record-hotkey
 ```
 
 ```bash
-npm install v-record-hotkey "vue@>=3.3.0"
+npm install v-record-hotkey
 ```
 
-Vue `3.3.0` or later is required.
+This package requires Vue `3.3.0` or later as a peer dependency.
+
 The examples below use `<script setup lang="ts">` in Vue Single-File Components (SFCs).
 Import the composables directly; no `app.use()` registration is needed.
 
